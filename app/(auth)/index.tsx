@@ -5,24 +5,35 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 
 export default function LoginScreen() {
-  const { setUser } = useAuth();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (email && password) {
-      setUser({
-        id: "37F35ADF-4045-4F6E-95D3-36C86E2A3030",
-        firstName: "Kevin",
-        lastName: "Ariza",
-        email,
-      });
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Por favor ingrese email y contraseña");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await signIn(email, password);
       router.replace("/(tabs)/library");
+    } catch (error) {
+      Alert.alert(
+        "Error de inicio de sesión",
+        "Credenciales inválidas. Por favor intente de nuevo.",
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,6 +48,7 @@ export default function LoginScreen() {
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        editable={!loading}
       />
 
       <TextInput
@@ -45,10 +57,19 @@ export default function LoginScreen() {
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        editable={!loading}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Iniciar Sesión</Text>
+      <TouchableOpacity
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text style={styles.buttonText}>Iniciar Sesión</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -83,5 +104,8 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  buttonDisabled: {
+    backgroundColor: "#ccc",
   },
 });
