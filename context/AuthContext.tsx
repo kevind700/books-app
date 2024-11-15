@@ -17,6 +17,7 @@ type User = {
 type AuthContextType = {
   user: User | null;
   token: string | null;
+  isLoading: boolean;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
   signIn: (email: string, password: string) => Promise<void>;
@@ -28,6 +29,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadToken();
@@ -42,6 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Error loading token:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    setIsLoading(true);
     try {
       const response = await fetch("http://localhost:3000/api/login", {
         method: "POST",
@@ -90,22 +95,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Error signing in:", error);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const signOut = async () => {
+    setIsLoading(true);
     try {
-      await AsyncStorage.removeItem("userToken");
+      const keysToRemove = ["userToken", "userData"];
+      await Promise.all(
+        keysToRemove.map((key) => AsyncStorage.removeItem(key)),
+      );
       setToken(null);
       setUser(null);
     } catch (error) {
       console.error("Error signing out:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, token, setUser, setToken, signIn, signOut }}
+      value={{ user, token, isLoading, setUser, setToken, signIn, signOut }}
     >
       {children}
     </AuthContext.Provider>

@@ -4,16 +4,37 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 
 export default function ProfileScreen() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
-  const handleLogout = () => {
-    router.replace("/(auth)");
+  const handleLogout = async () => {
+    Alert.alert("Cerrar Sesión", "¿Estás seguro que deseas cerrar sesión?", [
+      {
+        text: "Cancelar",
+        style: "cancel",
+      },
+      {
+        text: "Sí, cerrar sesión",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await signOut();
+            router.replace("/(auth)");
+          } catch (error) {
+            Alert.alert(
+              "Error",
+              "No se pudo cerrar sesión. Intente nuevamente.",
+            );
+          }
+        },
+      },
+    ]);
   };
 
   return (
