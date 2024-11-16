@@ -133,7 +133,7 @@ export default function LibraryScreen() {
       <Animated.View
         style={[styles.statsContainer, { height: animatedHeight }]}
       >
-        <StatsWidget refreshTrigger={refreshStats} />
+        {statsExpanded && <StatsWidget refreshTrigger={refreshStats} />}
       </Animated.View>
 
       <FlatList
