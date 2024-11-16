@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  ActivityIndicator,
+} from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/context/AuthContext";
@@ -12,9 +19,13 @@ interface ReadingStats {
   currentPage: number;
 }
 
+interface StatsWidgetProps {
+  refreshTrigger?: number;
+}
+
 const { width } = Dimensions.get("window");
 
-export default function StatsWidget() {
+export default function StatsWidget({ refreshTrigger = 0 }: StatsWidgetProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
@@ -22,10 +33,12 @@ export default function StatsWidget() {
     [],
   );
   const [stats, setStats] = useState<ReadingStats | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     loadBooks();
-  }, []);
+    loadStats();
+  }, [refreshTrigger]);
 
   useEffect(() => {
     if (selectedBookId) {
@@ -34,6 +47,7 @@ export default function StatsWidget() {
   }, [selectedBookId]);
 
   const loadBooks = async () => {
+    setIsLoading(true);
     try {
       const stats = await AsyncStorage.getItem(`readingStats_${user?.id}`);
       if (stats) {
@@ -46,10 +60,13 @@ export default function StatsWidget() {
       }
     } catch (error) {
       console.error("Error loading books:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const loadStats = async () => {
+    setIsLoading(true);
     try {
       const stats = await AsyncStorage.getItem(`readingStats_${user?.id}`);
       if (stats) {
@@ -61,6 +78,8 @@ export default function StatsWidget() {
       }
     } catch (error) {
       console.error("Error loading stats:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -90,7 +109,11 @@ export default function StatsWidget() {
         />
       </View>
 
-      {stats ? (
+      {isLoading ? (
+        <View style={styles.noStats}>
+          <ActivityIndicator size="small" color="#8B4513" />
+        </View>
+      ) : stats ? (
         <ScrollView
           style={[styles.statsContainer, { marginTop: 10 }]}
           showsVerticalScrollIndicator={false}

@@ -8,10 +8,11 @@ import {
   Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { API_BASE_URL } from "@env";
 import StatsWidget from "@/components/StatsWidget";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface Book {
   id: string;
@@ -45,11 +46,18 @@ export default function LibraryScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statsExpanded, setStatsExpanded] = useState(false);
+  const [refreshStats, setRefreshStats] = useState(0);
   const animatedHeight = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     fetchBooks();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setRefreshStats((prev) => prev + 1);
+    }, []),
+  );
 
   const toggleStats = () => {
     const toValue = statsExpanded ? 0 : 350;
@@ -121,7 +129,7 @@ export default function LibraryScreen() {
       <Animated.View
         style={[styles.statsContainer, { height: animatedHeight }]}
       >
-        <StatsWidget />
+        <StatsWidget refreshTrigger={refreshStats} />
       </Animated.View>
 
       <FlatList
