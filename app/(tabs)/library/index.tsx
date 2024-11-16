@@ -55,7 +55,11 @@ export default function LibraryScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setRefreshStats((prev) => prev + 1);
+      const timer = setTimeout(() => {
+        setRefreshStats((prev) => prev + 1);
+      }, 300);
+
+      return () => clearTimeout(timer);
     }, []),
   );
 
