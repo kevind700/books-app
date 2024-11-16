@@ -6,6 +6,7 @@ import {
   useEffect,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_BASE_URL } from "@env";
 
 type User = {
   id: string;
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserData = async (userToken: string) => {
     try {
-      const response = await fetch("http://localhost:3000/api/user", {
+      const response = await fetch(`${API_BASE_URL}/user`, {
         method: "GET",
         headers: {
           token: userToken,
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/api/login", {
+      const response = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
