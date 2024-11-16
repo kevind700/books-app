@@ -2,6 +2,7 @@ import { Slot, useRouter, useSegments, router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { useEffect } from "react";
 import { AuthProvider } from "../context/AuthContext";
+import { BookProvider } from "../context/BookContext";
 import { SplashScreen } from "expo-router";
 import { useCallback } from "react";
 
@@ -35,7 +36,9 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <RootLayoutNav />
+      <BookProvider>
+        <RootLayoutNav />
+      </BookProvider>
     </AuthProvider>
   );
 }
