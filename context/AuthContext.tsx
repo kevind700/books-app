@@ -6,7 +6,7 @@ import {
   useEffect,
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { API_BASE_URL } from "@env";
+import { API_BASE_URL } from "@/utils/constants";
 
 type User = {
   id: string;

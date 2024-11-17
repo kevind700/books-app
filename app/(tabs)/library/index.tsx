@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { API_BASE_URL } from "@env";
+import { API_BASE_URL } from "@/utils/constants";
 import StatsWidget from "@/components/StatsWidget";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
