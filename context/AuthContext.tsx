@@ -7,6 +7,7 @@ import {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { API_BASE_URL } from "@/utils/constants";
+import { checkConnectivity } from "@/utils/networkUtils";
 
 type User = {
   id: string;
@@ -39,9 +40,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadToken = async () => {
     try {
       const savedToken = await AsyncStorage.getItem("userToken");
+      const savedUserData = await AsyncStorage.getItem("userData");
+
       if (savedToken) {
         setToken(savedToken);
-        await fetchUserData(savedToken);
+        if (savedUserData) {
+          setUser(JSON.parse(savedUserData));
+        }
+
+        const isConnected = await checkConnectivity();
+        if (isConnected) {
+          await fetchUserData(savedToken);
+        }
       }
     } catch (error) {
       console.error("Error loading token:", error);
@@ -64,16 +74,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const userData = await response.json();
+      await AsyncStorage.setItem("userData", JSON.stringify(userData));
       setUser(userData);
     } catch (error) {
       console.error("Error fetching user data:", error);
-      await signOut();
+      const isConnected = await checkConnectivity();
+      if (isConnected) {
+        await signOut();
+      }
     }
   };
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      const isConnected = await checkConnectivity();
+      if (!isConnected) {
+        throw new Error("No hay conexión a internet");
+      }
+
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
         headers: {

@@ -13,6 +13,8 @@ import { API_BASE_URL } from "@/utils/constants";
 import StatsWidget from "@/components/StatsWidget";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
+import { useBook } from "@/context/BookContext";
+import { RefreshControl } from "react-native";
 
 interface Book {
   id: string;
@@ -41,17 +43,19 @@ const BookItem = ({ book, onPress }: { book: Book; onPress: () => void }) => (
 );
 
 export default function LibraryScreen() {
+  const { books, isLoading, error, refreshBooks } = useBook();
   const router = useRouter();
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [statsExpanded, setStatsExpanded] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [refreshStats, setRefreshStats] = useState(0);
   const animatedHeight = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    fetchBooks();
-  }, []);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshBooks();
+    setRefreshing(false);
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -74,42 +78,18 @@ export default function LibraryScreen() {
     setStatsExpanded(!statsExpanded);
   };
 
-  const fetchBooks = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/books`, {
-        method: "GET",
-      });
-      if (!response.ok) {
-        throw new Error("Error al cargar los libros");
-      }
-      const data = await response.json();
-      setBooks(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleBookPress = (book: Book) => {
+    setSelectedBook(book.id);
     router.push({
       pathname: "/library/[id]",
       params: { id: book.id, book: JSON.stringify(book) },
     });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#8B4513" />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
@@ -133,8 +113,19 @@ export default function LibraryScreen() {
       <Animated.View
         style={[styles.statsContainer, { height: animatedHeight }]}
       >
-        {statsExpanded && <StatsWidget refreshTrigger={refreshStats} />}
+        {statsExpanded && (
+          <StatsWidget
+            refreshTrigger={refreshStats}
+            selectedBook={selectedBook}
+          />
+        )}
       </Animated.View>
+
+      {error && (
+        <View style={styles.centerContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
 
       <FlatList
         data={books}
@@ -143,6 +134,9 @@ export default function LibraryScreen() {
         )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       />
     </View>
   );

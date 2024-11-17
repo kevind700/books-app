@@ -21,19 +21,29 @@ interface ReadingStats {
 
 interface StatsWidgetProps {
   refreshTrigger?: number;
+  selectedBook: string | null;
 }
 
 const { width } = Dimensions.get("window");
 
-export default function StatsWidget({ refreshTrigger = 0 }: StatsWidgetProps) {
+export default function StatsWidget({
+  refreshTrigger = 0,
+  selectedBook,
+}: StatsWidgetProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
+  const [selectedBookId, setSelectedBookId] = useState<string | null>(
+    selectedBook,
+  );
   const [items, setItems] = useState<Array<{ label: string; value: string }>>(
     [],
   );
   const [stats, setStats] = useState<ReadingStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setSelectedBookId(selectedBook);
+  }, [selectedBook]);
 
   useEffect(() => {
     loadBooks();
